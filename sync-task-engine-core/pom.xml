@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.cloud</groupId>
+        <artifactId>sync-task-engine-parent</artifactId>
+        <version>${revision}</version>
+    </parent>
+
+    <artifactId>sync-task-engine-core</artifactId>
+    <packaging>jar</packaging>
+    <name>SyncTask Engine Core</name>
+    <description>引擎核心模块 - 不含Spring依赖，零框架耦合</description>
+
+    <dependencies>
+        <!-- SLF4J 日志门面 -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Hutool 工具类（仅用轻量方法） -->
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+        </dependency>
+    </dependencies>
+</project>

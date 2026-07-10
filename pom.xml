@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.cloud</groupId>
+    <artifactId>sync-task-engine-parent</artifactId>
+    <packaging>pom</packaging>
+    <version>${revision}</version>
+    <name>SyncTask Engine Parent</name>
+    <description>轻量级业务任务编排引擎 - 父模块</description>
+
+    <modules>
+        <module>sync-task-engine-core</module>
+        <module>sync-task-engine-spring-boot-autoconfigure</module>
+        <module>sync-task-engine-xxljob-adapter</module>
+    </modules>
+
+    <properties>
+        <revision>1.0.0-SNAPSHOT</revision>
+        <java.version>11</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+
+        <!-- 框架版本 -->
+        <spring-boot.version>2.7.18</spring-boot.version>
+        <hutool.version>5.8.25</hutool.version>
+        <slf4j.version>1.7.36</slf4j.version>
+        <xxl-job.version>2.4.1</xxl-job.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- 内部模块 -->
+            <dependency>
+                <groupId>com.cloud</groupId>
+                <artifactId>sync-task-engine-core</artifactId>
+                <version>${revision}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.cloud</groupId>
+                <artifactId>sync-task-engine-spring-boot-autoconfigure</artifactId>
+                <version>${revision}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.cloud</groupId>
+                <artifactId>sync-task-engine-xxljob-adapter</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
+            <!-- 外部依赖 -->
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-all</artifactId>
+                <version>${hutool.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.xuxueli</groupId>
+                <artifactId>xxl-job-core</artifactId>
+                <version>${xxl-job.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

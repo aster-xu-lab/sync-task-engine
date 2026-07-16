@@ -13,7 +13,7 @@
 
     <modules>
         <module>sync-task-engine-core</module>
-        <module>sync-task-engine-spring-boot-autoconfigure</module>
+        <module>sync-task-engine-spring-boot-starter</module>
         <module>sync-task-engine-xxljob-adapter</module>
     </modules>
 
@@ -50,7 +50,7 @@
             </dependency>
             <dependency>
                 <groupId>com.cloud</groupId>
-                <artifactId>sync-task-engine-spring-boot-autoconfigure</artifactId>
+                <artifactId>sync-task-engine-spring-boot-starter</artifactId>
                 <version>${revision}</version>
             </dependency>
             <dependency>

@@ -144,7 +144,7 @@
 <!-- 核心引擎 + 自动装配 -->
 <dependency>
     <groupId>com.cloud</groupId>
-    <artifactId>sync-task-engine-spring-boot-autoconfigure</artifactId>
+    <artifactId>sync-task-engine-spring-boot-starter</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 </dependency>
 
@@ -278,7 +278,7 @@ sync-task-engine/
 │       └── util/
 │           └── JobLogUtil.java
 │
-├── sync-task-engine-spring-boot-autoconfigure/  # 自动装配
+├── sync-task-engine-spring-boot-starter/        # Spring Boot Starter（自动装配）
 │   └── src/main/
 │       ├── java/.../autoconfigure/
 │       │   ├── SyncTaskEngineAutoConfiguration.java  # 自动装配入口

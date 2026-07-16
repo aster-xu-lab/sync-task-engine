@@ -10,10 +10,10 @@
         <version>${revision}</version>
     </parent>
 
-    <artifactId>sync-task-engine-spring-boot-autoconfigure</artifactId>
+    <artifactId>sync-task-engine-spring-boot-starter</artifactId>
     <packaging>jar</packaging>
-    <name>SyncTask Engine Spring Boot Autoconfigure</name>
-    <description>Spring Boot 自动装配模块</description>
+    <name>SyncTask Engine Spring Boot Starter</name>
+    <description>Spring Boot Starter（自动装配 + 默认 JSON 参数解析）</description>
 
     <dependencies>
         <dependency>

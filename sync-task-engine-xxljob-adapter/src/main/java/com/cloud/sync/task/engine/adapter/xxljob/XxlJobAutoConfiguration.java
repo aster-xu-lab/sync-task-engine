@@ -12,7 +12,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -54,7 +53,8 @@ public class XxlJobAutoConfiguration {
             ObjectProvider<List<TaskFetchFilter<Object>>> fetchFiltersProvider,
             ObjectProvider<List<TaskLifecycleListener<Object>>> listenersProvider,
             ObjectProvider<LockService> lockServiceProvider,
-            ObjectProvider<NotifyChannel> notifyChannelProvider) {
+            ObjectProvider<NotifyChannel> notifyChannelProvider,
+            ObjectProvider<TaskArchiveService<Object>> archiveServiceProvider) {
 
         SyncTaskEngine.Builder<Object, Object> builder = new SyncTaskEngine.Builder<Object, Object>()
                 .registry(registry)
@@ -65,6 +65,7 @@ public class XxlJobAutoConfiguration {
         listenersProvider.ifAvailable(builder::listeners);
         lockServiceProvider.ifAvailable(builder::lockService);
         notifyChannelProvider.ifAvailable(builder::notifyChannel);
+        archiveServiceProvider.ifAvailable(builder::archiveService);
 
         SyncTaskEngine<Object, Object> engine = builder.build();
         return new XxlJobSyncTaskLauncher<>(engine, paramParser);

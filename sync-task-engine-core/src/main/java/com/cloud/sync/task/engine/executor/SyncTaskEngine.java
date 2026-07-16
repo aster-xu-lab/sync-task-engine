@@ -16,7 +16,7 @@ import java.util.List;
 /**
  * 同步任务编排引擎（完整版）。
  *
- * <p>完整的编排入口，支持六大 SPI 扩展点：
+ * <p>完整的编排入口，支持七大 SPI 扩展点：
  * <ol>
  *   <li>{@link TaskStore} —— 任务存储（MyBatis/JPA/外部 API）</li>
  *   <li>{@link SchedulerAdapter} —— 调度框架适配（xxl-job/PowerJob/手动触发）</li>
@@ -25,6 +25,7 @@ import java.util.List;
  *   <li>{@link SyncTaskParamValidator} —— 参数校验扩展</li>
  *   <li>{@link TaskFetchFilter} —— 任务拉取过滤</li>
  *   <li>{@link TaskLifecycleListener} —— 生命周期事件</li>
+ *   <li>{@link TaskArchiveService} —— 历史任务归档</li>
  * </ol>
  * </p>
  *
@@ -64,6 +65,7 @@ public class SyncTaskEngine<T, C> {
     private final List<TaskLifecycleListener<T>> listeners;
     private final LockService lockService;
     private final NotifyChannel notifyChannel;
+    private final TaskArchiveService<T> archiveService;
 
     private SyncTaskEngine(Builder<T, C> builder) {
         this.registry = builder.registry;
@@ -73,6 +75,7 @@ public class SyncTaskEngine<T, C> {
         this.listeners = builder.listeners;
         this.lockService = builder.lockService;
         this.notifyChannel = builder.notifyChannel;
+        this.archiveService = builder.archiveService;
     }
 
     /**
@@ -170,6 +173,10 @@ public class SyncTaskEngine<T, C> {
         return lockService;
     }
 
+    public TaskArchiveService<T> getArchiveService() {
+        return archiveService;
+    }
+
     // ==================== Builder ====================
 
     /**
@@ -183,6 +190,7 @@ public class SyncTaskEngine<T, C> {
         private List<TaskLifecycleListener<T>> listeners = new ArrayList<>();
         private LockService lockService;
         private NotifyChannel notifyChannel;
+        private TaskArchiveService<T> archiveService;
 
         public Builder<T, C> registry(SyncTaskHandlerRegistry<T, C> registry) {
             this.registry = registry;
@@ -219,6 +227,11 @@ public class SyncTaskEngine<T, C> {
 
         public Builder<T, C> notifyChannel(NotifyChannel notifyChannel) {
             this.notifyChannel = notifyChannel;
+            return this;
+        }
+
+        public Builder<T, C> archiveService(TaskArchiveService<T> archiveService) {
+            this.archiveService = archiveService;
             return this;
         }
 

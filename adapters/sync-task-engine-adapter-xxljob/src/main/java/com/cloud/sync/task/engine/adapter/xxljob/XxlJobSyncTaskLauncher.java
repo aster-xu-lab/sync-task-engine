@@ -1,5 +1,6 @@
 package com.cloud.sync.task.engine.adapter.xxljob;
 
+import com.cloud.sync.task.engine.SyncTaskEngineConstants;
 import com.cloud.sync.task.engine.executor.SyncTaskEngine;
 import com.cloud.sync.task.engine.spi.SyncTaskParamParser;
 import com.xxl.job.core.context.XxlJobHelper;
@@ -40,7 +41,7 @@ public class XxlJobSyncTaskLauncher<T, C> {
     /**
      * XXL-JOB 调度入口。JobHandler="syncTaskJob"。
      */
-    @XxlJob("syncTaskJob")
+    @XxlJob(SyncTaskEngineConstants.XXL_JOB_HANDLER_NAME)
     public void syncTaskJob() throws InterruptedException {
         String rawParam = XxlJobHelper.getJobParam();
         SyncTaskEngine.SyncTaskParamSupplier supplier = paramParser.parse(rawParam);

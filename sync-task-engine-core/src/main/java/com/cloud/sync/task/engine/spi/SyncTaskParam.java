@@ -1,5 +1,7 @@
 package com.cloud.sync.task.engine.spi;
 
+import com.cloud.sync.task.engine.SyncTaskEngineConstants;
+
 import java.util.List;
 
 /**
@@ -40,14 +42,14 @@ public interface SyncTaskParam {
      * 获取一批处理任务最大数，默认 100。
      */
     default Integer getSize() {
-        return 100;
+        return SyncTaskEngineConstants.DEFAULT_FETCH_SIZE;
     }
 
     /**
      * 获取最大重试次数，默认 5。
      */
     default Integer getLimitRetryTimes() {
-        return 5;
+        return SyncTaskEngineConstants.DEFAULT_MAX_RETRY_TIMES;
     }
 
     /**
@@ -61,14 +63,14 @@ public interface SyncTaskParam {
      * 获取状态权重数组 [INIT, FAIL, WAIT]，默认 4:1:1。
      */
     default int[] getStatusWeights() {
-        return new int[]{4, 1, 1};
+        return SyncTaskEngineConstants.DEFAULT_STATUS_WEIGHTS;
     }
 
     /**
      * 获取错误消息规则：0-SKIP, 1-ONE_THRESHOLD, 2-BATCH_THRESHOLD, 3-MIN_THRESHOLD。
      */
     default int getErrorMessageRule() {
-        return 1;
+        return SyncTaskEngineConstants.DEFAULT_ERROR_MSG_RULE;
     }
 
     /**
@@ -89,7 +91,7 @@ public interface SyncTaskParam {
      * 获取批处理大小，默认 20（V2 处理器生效）。
      */
     default Integer getBatchSize() {
-        return 20;
+        return SyncTaskEngineConstants.DEFAULT_BATCH_SIZE;
     }
 
     /**

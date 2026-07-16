@@ -1,5 +1,6 @@
 package com.cloud.sync.task.engine.autoconfigure;
 
+import com.cloud.sync.task.engine.SyncTaskEngineConstants;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -8,7 +9,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author sync-task-engine
  * @date 2026-07-10
  */
-@ConfigurationProperties(prefix = "sync-task.engine")
+@ConfigurationProperties(prefix = SyncTaskEngineConstants.CONFIG_PREFIX)
 public class SyncTaskEngineProperties {
 
     /** 是否启用，默认 true */

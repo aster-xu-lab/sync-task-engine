@@ -31,7 +31,7 @@ public class RedissonLockService implements LockService {
             return lock.tryLock(waitTime, leaseTime, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            log.warn("获取锁被中断, key={}", key, e);
+            log.warn("[RedissonLock] 获取锁被中断, key={}", key, e);
             return false;
         }
     }

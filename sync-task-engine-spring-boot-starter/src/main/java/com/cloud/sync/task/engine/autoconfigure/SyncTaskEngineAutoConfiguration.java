@@ -1,5 +1,6 @@
 package com.cloud.sync.task.engine.autoconfigure;
 
+import com.cloud.sync.task.engine.SyncTaskEngineConstants;
 import com.cloud.sync.task.engine.registry.SyncTaskHandlerRegistry;
 import com.cloud.sync.task.engine.spi.SyncTaskHandler;
 import com.cloud.sync.task.engine.spi.SyncTaskParam;
@@ -30,7 +31,7 @@ import java.util.List;
  * @date 2026-07-10
  */
 @AutoConfiguration
-@ConditionalOnProperty(prefix = "sync-task.engine", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = SyncTaskEngineConstants.CONFIG_PREFIX, name = SyncTaskEngineConstants.CONFIG_KEY_ENABLED, havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(SyncTaskEngineProperties.class)
 public class SyncTaskEngineAutoConfiguration {
 
@@ -64,7 +65,7 @@ public class SyncTaskEngineAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(SyncTaskParamParser.class)
     @ConditionalOnClass(ObjectMapper.class)
-    @ConditionalOnProperty(prefix = "sync-task.engine", name = "param-class")
+    @ConditionalOnProperty(prefix = SyncTaskEngineConstants.CONFIG_PREFIX, name = SyncTaskEngineConstants.CONFIG_KEY_PARAM_CLASS)
     @SuppressWarnings("unchecked")
     public SyncTaskParamParser defaultSyncTaskParamParser(SyncTaskEngineProperties properties) {
         String className = properties.getParamClass();

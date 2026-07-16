@@ -87,10 +87,10 @@ public class SyncTaskEngine<T, C> {
     public void execute(SyncTaskParamSupplier paramSupplier) throws InterruptedException {
         // 1. 获取调度参数
         String jobParam = schedulerAdapter.resolveJobParam();
-        schedulerAdapter.logInfo("SyncTaskEngine 开始执行, 参数: {}", jobParam);
+        schedulerAdapter.logInfo("[SyncTaskEngine] 开始执行, 参数: {}", jobParam);
 
         if (StrUtil.isBlank(jobParam)) {
-            schedulerAdapter.logInfo("参数为空，跳过执行");
+            schedulerAdapter.logInfo("[SyncTaskEngine] 参数为空，跳过执行");
             return;
         }
 
@@ -103,7 +103,7 @@ public class SyncTaskEngine<T, C> {
                 try {
                     validator.validate(param);
                 } catch (SyncTaskParamValidator.ValidationException e) {
-                    schedulerAdapter.logInfo("参数校验不通过: {}", e.getMessage());
+                    schedulerAdapter.logInfo("[SyncTaskEngine] 参数校验不通过: {}", e.getMessage());
                     return;
                 }
             }
@@ -112,11 +112,11 @@ public class SyncTaskEngine<T, C> {
         // 4. 路由获取处理器
         SyncTaskHandler<T, C> handler = registry.getHandler(param);
         if (ObjectUtil.isNull(handler)) {
-            schedulerAdapter.logInfo("找不到对应的处理器, orderType={}, syncSystem={}",
+            schedulerAdapter.logInfo("[SyncTaskEngine] 找不到对应的处理器, orderType={}, syncSystem={}",
                     param.getOrderType(), param.getSyncSystem());
             return;
         }
-        schedulerAdapter.logInfo("实际处理器: {}", handler.getClass().getName());
+        schedulerAdapter.logInfo("[SyncTaskEngine] 实际处理器: {}", handler.getClass().getName());
 
         // 5. 拉取待处理任务
         List<T> tasks = handler.fetchTasks(param);
@@ -133,10 +133,10 @@ public class SyncTaskEngine<T, C> {
         fireEvent(l -> l.onTasksFetched(fetchedTasks, param));
 
         if (CollUtil.isEmpty(fetchedTasks)) {
-            schedulerAdapter.logInfo("待处理任务为空");
+            schedulerAdapter.logInfo("[SyncTaskEngine] 待处理任务为空");
             return;
         }
-        schedulerAdapter.logInfo("待处理任务数量: {}", fetchedTasks.size());
+        schedulerAdapter.logInfo("[SyncTaskEngine] 待处理任务数量: {}", fetchedTasks.size());
 
         // 8. 批量执行（Handler 内部负责并发编排 + 状态管理 + 告警）
         handler.batchExecute(fetchedTasks, param);
@@ -144,7 +144,7 @@ public class SyncTaskEngine<T, C> {
         // 9. 触发批次完成事件
         fireEvent(l -> l.onBatchCompleted(fetchedTasks, null, param));
 
-        schedulerAdapter.logInfo("SyncTaskEngine 执行完成");
+        schedulerAdapter.logInfo("[SyncTaskEngine] 执行完成");
     }
 
     // ==================== 事件触发 ====================
@@ -158,7 +158,7 @@ public class SyncTaskEngine<T, C> {
             try {
                 action.accept(listener);
             } catch (Exception e) {
-                log.error("LifecycleListener 执行异常: {}", listener.getClass().getName(), e);
+                log.error("[SyncTaskEngine] LifecycleListener 执行异常: {}", listener.getClass().getName(), e);
             }
         }
     }

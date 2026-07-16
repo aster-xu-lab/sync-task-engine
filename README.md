@@ -76,16 +76,18 @@
 | 多 Job 分工 + 差异化 cron = 每种状态独立的重试心跳 | 引擎内部延迟队列/退避算法 | 用组合现有基础设施替代写代码 |
 | 三级告警阈值策略 | 完整的消息队列 | MySQL sync_task 表就是任务队列，够用且可控 |
 
-### 3. 六个 SPI 扩展点
+### 3. 七个 SPI 扩展点
 
 | SPI | 解决的原耦合 | 接入方实现 |
 |-----|------------|-----------|
 | **SchedulerAdapter** | 解除对 xxl-job 的耦合（XxlJobHelper.getJobParam() / XxlJobHelper.log()） | 实现 xxl-job / PowerJob / 手动触发适配器 |
+| **SyncTaskParamParser** | 解除参数解析对 Jackson/JSON 特定实现的耦合 | 实现自定义解析逻辑，或直接配置 param-class 使用默认实现 |
 | **TaskStore** | 解除对 ISyncTaskService（MyBatis-Plus）的耦合 | 实现 MyBatis / JPA / Mongo / 外部 API |
 | **NotifyChannel** | 解除对 QWRobotUtil（企微机器人）的耦合 | 实现企微 / 飞书 / 钉钉 / 邮件 |
 | **LockService** | 解除对 @XLock 注解框架的耦合 | 实现 Redisson / @XLock 适配 / DB 行锁 |
 | **SyncTaskParamValidator** | 解除对业务枚举（OrderTypeEnum/SystemEnum）的耦合 | 各项目实现自己的校验逻辑 |
 | **TaskLifecycleListener** | 补充缺失的生命周期事件（原设计没有） | Metrics 埋点 / 审计日志 / 编排链 |
+| **TaskArchiveService** | 补充历史任务归档能力（原设计没有） | 实现历史表迁移/物理删除，用 xxl-job cron 触发 |
 
 ### 4. 状态机设计
 
@@ -134,6 +136,8 @@
 
 ## 使用方式
 
+> 引擎已实现 Spring Boot 自动装配，接入方零 Java Config 即可使用。
+
 ### 1. 引入依赖
 
 ```xml
@@ -152,59 +156,98 @@
 </dependency>
 ```
 
-### 2. 实现 Handler
+### 2. 配置参数解析
+
+**方式一：配置属性（最简）**
+
+```yaml
+sync-task:
+  engine:
+    param-class: com.example.SyncTaskJobParamConfig  # SyncTaskParam 实现类
+```
+
+**方式二：自定义 ParamParser（复杂场景）**
 
 ```java
 @Component
-public class MySyncTaskHandler extends AbstractSyncTaskHandler {
+public class MyParamParser implements SyncTaskParamParser {
+    @Override
+    public SyncTaskEngine.SyncTaskParamSupplier parse(String rawJson) {
+        return json -> JSON.parseObject(json, MyParamConfig.class);
+    }
+}
+```
+
+### 3. 实现 Handler
+
+```java
+@Component
+public class MySyncTaskHandler implements SyncTaskHandler<SyncTaskBO, SyncTaskContext> {
     @Override
     public String getHandlerKey() {
         return "1-1-9"; // orderType-syncTaskType-syncSystem
     }
 
     @Override
-    public void updateContext(SyncTaskContext context) {
-        // 准备请求数据
+    public List<SyncTaskBO> fetchTasks(SyncTaskParam param) {
+        return syncTaskMapper.findPending(param);
     }
 
     @Override
-    public void executeCore(SyncTaskContext context) {
+    public void batchExecute(List<SyncTaskBO> tasks, SyncTaskParam param) {
+        // 并发执行、状态管理
+    }
+
+    @Override
+    public boolean execute(SyncTaskContext context, SyncTaskParam param) {
         // 调用外部系统接口
+        return true;
+    }
+
+    @Override
+    public String formatMessage(SyncTaskContext context, String message) {
+        return "[" + context.getOrderCode() + "] " + message;
     }
 }
 ```
 
-### 3. 实现 SPI 适配器
+### 4. 可选：实现 SPI 扩展
 
 ```java
-@Configuration
-public class SyncTaskConfiguration {
+@Component
+public class MyValidator implements SyncTaskParamValidator {
+    @Override
+    public void validate(SyncTaskParam param) throws ValidationException {
+        if (param.getOrderType() == null) {
+            throw new ValidationException("orderType 不能为空");
+        }
+    }
+}
 
-    @Bean
-    public SyncTaskParamValidator myValidator() {
-        return param -> {
-            if (param.getOrderType() == null) {
-                throw new ValidationException("orderType 不能为空");
-            }
-        };
+@Component
+public class MyNotifyChannel implements NotifyChannel {
+    @Override
+    public boolean sendMessage(String content, NotifyLevel level) {
+        // 发送企微/飞书/钉钉消息
+        return true;
+    }
+}
+
+@Component
+public class MyTaskArchiveService implements TaskArchiveService<SyncTaskBO> {
+    @Override
+    public int archiveSuccessTasks(Date beforeTime) {
+        return mapper.moveToArchive(beforeTime, "SUCCESS");
     }
 
-    @Bean
-    public TaskLifecycleListener<SyncTaskBO> metricsListener(MeterRegistry registry) {
-        return new TaskLifecycleListener<>() {
-            @Override
-            public void onTaskSuccess(SyncTaskBO task, SyncTaskParam config) {
-                registry.counter("sync.task.success").increment();
-            }
-
-            @Override
-            public void onTaskFailed(SyncTaskBO task, String msg, SyncTaskParam config) {
-                registry.counter("sync.task.fail").increment();
-            }
-        };
+    @Override
+    public int archiveDeadTasks(Date beforeTime) {
+        return mapper.moveToArchive(beforeTime, "DEAD");
     }
 }
 ```
+
+> SPI Bean 只需加 `@Component`，引擎通过 `@AutoConfiguration` 自动发现注入。无需手写 `SyncTaskEngine.Builder` 或 `@Configuration` 类。
 
 ---
 
@@ -215,16 +258,18 @@ sync-task-engine/
 ├── pom.xml                                     # 父 POM
 ├── sync-task-engine-core/                      # 引擎核心（零框架依赖）
 │   └── src/main/java/com/cloud/sync/task/engine/
-│       ├── spi/                                # 7 个 SPI 接口
-│       │   ├── SyncTaskHandler.java
-│       │   ├── SyncTaskParam.java
-│       │   ├── SyncTaskParamValidator.java
-│       │   ├── TaskRejectedCallback.java
-│       │   ├── TaskStore.java
-│       │   ├── NotifyChannel.java
-│       │   ├── LockService.java
-│       │   ├── TaskFetchFilter.java
-│       │   └── TaskLifecycleListener.java
+│       ├── spi/                                # 8 个 SPI 接口
+│       │   ├── SyncTaskHandler.java            # 同步任务处理器（业务实现）
+│       │   ├── SyncTaskParam.java              # 任务调度参数
+│       │   ├── SyncTaskParamParser.java        # 参数解析器（JSON → SyncTaskParam）
+│       │   ├── SyncTaskParamValidator.java     # 参数校验器
+│       │   ├── TaskFetchFilter.java            # 任务拉取过滤器
+│       │   ├── TaskStore.java                  # 任务存储抽象
+│       │   ├── NotifyChannel.java              # 通知渠道
+│       │   ├── LockService.java                # 分布式锁
+│       │   ├── TaskLifecycleListener.java      # 生命周期监听器
+│       │   ├── TaskRejectedCallback.java       # 拒绝策略回调
+│       │   └── TaskArchiveService.java         # 历史任务归档
 │       ├── registry/
 │       │   └── SyncTaskHandlerRegistry.java
 │       ├── executor/
@@ -236,14 +281,18 @@ sync-task-engine/
 ├── sync-task-engine-spring-boot-autoconfigure/  # 自动装配
 │   └── src/main/
 │       ├── java/.../autoconfigure/
-│       │   ├── SyncTaskEngineAutoConfiguration.java
-│       │   └── SyncTaskEngineProperties.java
+│       │   ├── SyncTaskEngineAutoConfiguration.java  # 自动装配入口
+│       │   ├── SyncTaskEngineProperties.java         # 配置属性
+│       │   └── JsonSyncTaskParamParser.java          # 默认 JSON 解析器
 │       └── resources/META-INF/spring/spring.factories
 │
 └── sync-task-engine-xxljob-adapter/             # xxl-job 适配器
-    └── src/main/java/.../adapter/xxljob/
-        ├── XxlJobSchedulerAdapter.java
-        └── XxlJobSyncTaskLauncher.java
+    └── src/main/
+        ├── java/.../adapter/xxljob/
+        │   ├── XxlJobSchedulerAdapter.java           # 调度适配器实现
+        │   ├── XxlJobSyncTaskLauncher.java           # @XxlJob 桥接器
+        │   └── XxlJobAutoConfiguration.java          # 自动装配
+        └── resources/META-INF/spring/spring.factories
 ```
 
 ---

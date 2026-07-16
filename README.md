@@ -141,20 +141,28 @@
 ### 1. 引入依赖
 
 ```xml
-<!-- 核心引擎 + 自动装配 -->
+<!-- 全家桶：一键引入，默认装配 xxl-job + MyBatis + Redisson -->
 <dependency>
     <groupId>com.cloud</groupId>
     <artifactId>sync-task-engine-spring-boot-starter</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 </dependency>
-
-<!-- xxl-job 适配器（如果使用 xxl-job） -->
-<dependency>
-    <groupId>com.cloud</groupId>
-    <artifactId>sync-task-engine-xxljob-adapter</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
-</dependency>
 ```
+
+> 如果想自定义某个 SPI 实现，可以 exclude 对应的 adapter 并引入自己的：
+> ```xml
+> <dependency>
+>     <groupId>com.cloud</groupId>
+>     <artifactId>sync-task-engine-spring-boot-starter</artifactId>
+>     <version>1.0.0-SNAPSHOT</version>
+>     <exclusions>
+>         <exclusion>
+>             <groupId>com.cloud</groupId>
+>             <artifactId>sync-task-engine-adapter-xxljob</artifactId>
+>         </exclusion>
+>     </exclusions>
+> </dependency>
+> ```
 
 ### 2. 配置参数解析
 
@@ -278,7 +286,7 @@ sync-task-engine/
 │       └── util/
 │           └── JobLogUtil.java
 │
-├── sync-task-engine-spring-boot-starter/        # Spring Boot Starter（自动装配）
+├── sync-task-engine-spring-boot-starter/        # 全家桶 Starter（引入即默认装配 xxl-job + MyBatis + Redisson）
 │   └── src/main/
 │       ├── java/.../autoconfigure/
 │       │   ├── SyncTaskEngineAutoConfiguration.java  # 自动装配入口
@@ -286,13 +294,29 @@ sync-task-engine/
 │       │   └── JsonSyncTaskParamParser.java          # 默认 JSON 解析器
 │       └── resources/META-INF/spring/spring.factories
 │
-└── sync-task-engine-xxljob-adapter/             # xxl-job 适配器
-    └── src/main/
-        ├── java/.../adapter/xxljob/
-        │   ├── XxlJobSchedulerAdapter.java           # 调度适配器实现
-        │   ├── XxlJobSyncTaskLauncher.java           # @XxlJob 桥接器
-        │   └── XxlJobAutoConfiguration.java          # 自动装配
-        └── resources/META-INF/spring/spring.factories
+└── adapters/                                    # SPI 默认适配器
+    ├── sync-task-engine-adapter-xxljob/         # 调度层：xxl-job
+    │   └── src/main/
+    │       ├── java/.../adapter/xxljob/
+    │       │   ├── XxlJobSchedulerAdapter.java       # 调度适配器
+    │       │   ├── XxlJobSyncTaskLauncher.java       # @XxlJob 桥接器
+    │       │   └── XxlJobAutoConfiguration.java      # 自动装配
+    │       └── resources/META-INF/spring/spring.factories
+    │
+    ├── sync-task-engine-adapter-mybatis/        # DAL层：MyBatis-Plus
+    │   └── src/main/
+    │       ├── java/.../adapter/mybatis/
+    │       │   ├── MybatisTaskStore.java              # TaskStore 默认实现
+    │       │   ├── MybatisTaskArchiveService.java     # 归档默认实现
+    │       │   └── MybatisAutoConfiguration.java      # 自动装配
+    │       └── resources/META-INF/spring/spring.factories
+    │
+    └── sync-task-engine-adapter-redisson/       # 锁层：Redisson
+        └── src/main/
+            ├── java/.../adapter/redisson/
+            │   ├── RedissonLockService.java           # LockService 默认实现
+            │   └── RedissonAutoConfiguration.java      # 自动装配
+            └── resources/META-INF/spring/spring.factories
 ```
 
 ---

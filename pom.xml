@@ -14,7 +14,9 @@
     <modules>
         <module>sync-task-engine-core</module>
         <module>sync-task-engine-spring-boot-starter</module>
-        <module>sync-task-engine-xxljob-adapter</module>
+        <module>adapters/sync-task-engine-adapter-xxljob</module>
+        <module>adapters/sync-task-engine-adapter-mybatis</module>
+        <module>adapters/sync-task-engine-adapter-redisson</module>
     </modules>
 
     <properties>
@@ -30,6 +32,8 @@
         <hutool.version>5.8.25</hutool.version>
         <slf4j.version>1.7.36</slf4j.version>
         <xxl-job.version>2.4.1</xxl-job.version>
+        <mybatis-plus.version>3.5.5</mybatis-plus.version>
+        <redisson.version>3.24.3</redisson.version>
     </properties>
 
     <dependencyManagement>
@@ -55,7 +59,17 @@
             </dependency>
             <dependency>
                 <groupId>com.cloud</groupId>
-                <artifactId>sync-task-engine-xxljob-adapter</artifactId>
+                <artifactId>sync-task-engine-adapter-xxljob</artifactId>
+                <version>${revision}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.cloud</groupId>
+                <artifactId>sync-task-engine-adapter-mybatis</artifactId>
+                <version>${revision}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.cloud</groupId>
+                <artifactId>sync-task-engine-adapter-redisson</artifactId>
                 <version>${revision}</version>
             </dependency>
 
@@ -69,6 +83,16 @@
                 <groupId>com.xuxueli</groupId>
                 <artifactId>xxl-job-core</artifactId>
                 <version>${xxl-job.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-boot-starter</artifactId>
+                <version>${mybatis-plus.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.redisson</groupId>
+                <artifactId>redisson-spring-boot-starter</artifactId>
+                <version>${redisson.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

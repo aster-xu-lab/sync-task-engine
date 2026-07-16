@@ -13,12 +13,30 @@
     <artifactId>sync-task-engine-spring-boot-starter</artifactId>
     <packaging>jar</packaging>
     <name>SyncTask Engine Spring Boot Starter</name>
-    <description>Spring Boot Starter（自动装配 + 默认 JSON 参数解析）</description>
+    <description>全家桶 Starter：引入即默认装配 xxl-job + MyBatis + Redisson + Jackson 参数解析</description>
 
     <dependencies>
         <dependency>
             <groupId>com.cloud</groupId>
             <artifactId>sync-task-engine-core</artifactId>
+        </dependency>
+
+        <!-- 默认适配器：调度层 → xxl-job -->
+        <dependency>
+            <groupId>com.cloud</groupId>
+            <artifactId>sync-task-engine-adapter-xxljob</artifactId>
+        </dependency>
+
+        <!-- 默认适配器：DAL层 → MyBatis -->
+        <dependency>
+            <groupId>com.cloud</groupId>
+            <artifactId>sync-task-engine-adapter-mybatis</artifactId>
+        </dependency>
+
+        <!-- 默认适配器：锁层 → Redisson -->
+        <dependency>
+            <groupId>com.cloud</groupId>
+            <artifactId>sync-task-engine-adapter-redisson</artifactId>
         </dependency>
 
         <dependency>

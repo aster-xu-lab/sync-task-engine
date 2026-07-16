@@ -8,12 +8,13 @@
         <groupId>com.cloud</groupId>
         <artifactId>sync-task-engine-parent</artifactId>
         <version>${revision}</version>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>sync-task-engine-xxljob-adapter</artifactId>
+    <artifactId>sync-task-engine-adapter-xxljob</artifactId>
     <packaging>jar</packaging>
-    <name>SyncTask Engine XXL-JOB Adapter</name>
-    <description>XXL-JOB 调度框架适配器（可选依赖）</description>
+    <name>SyncTask Engine Adapter: XXL-JOB</name>
+    <description>调度层：XXL-JOB 适配器实现</description>
 
     <dependencies>
         <dependency>

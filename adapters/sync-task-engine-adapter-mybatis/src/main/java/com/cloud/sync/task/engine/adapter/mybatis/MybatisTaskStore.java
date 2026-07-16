@@ -1,53 +1,98 @@
 package com.cloud.sync.task.engine.adapter.mybatis;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.cloud.sync.task.engine.adapter.mybatis.entity.SyncTaskDO;
+import com.cloud.sync.task.engine.adapter.mybatis.mapper.SyncTaskMapper;
 import com.cloud.sync.task.engine.spi.TaskStore;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
  * MyBatis-Plus 任务存储默认实现。
- * <p>基于 MyBatis-Plus 的通用 CRUD 操作封装。
- * 接入方需通过子类覆写各方法实现具体 mapper 调用。</p>
- *
- * @param <T> 任务业务对象类型
+ * <p>基于标准表结构 {@link SyncTaskDO} 提供开箱即用的 CRUD 操作。</p>
  *
  * @author sync-task-engine
- * @date 2026-07-15
+ * @date 2026-07-16
  */
-public class MybatisTaskStore<T> implements TaskStore<T, Object, Object> {
+public class MybatisTaskStore implements TaskStore<SyncTaskDO, LambdaQueryWrapper<SyncTaskDO>, Page<SyncTaskDO>> {
 
-    @Override
-    public T findById(Long id) {
-        throw new UnsupportedOperationException("请通过子类覆写 findById 实现具体 mapper 调用");
+    private final SyncTaskMapper syncTaskMapper;
+
+    /** 默认拉取的状态列表 */
+    private static final List<String> DEFAULT_PENDING_STATUSES = Arrays.asList("INIT", "FAIL", "WAIT");
+
+    public MybatisTaskStore(SyncTaskMapper syncTaskMapper) {
+        this.syncTaskMapper = syncTaskMapper;
     }
 
     @Override
-    public List<T> findAll(Object query) {
-        throw new UnsupportedOperationException("请通过子类覆写 findAll 实现具体 mapper 调用");
+    public SyncTaskDO findById(Long id) {
+        return syncTaskMapper.selectById(id);
     }
 
     @Override
-    public List<T> pageList(Object query, Object pageParam) {
-        throw new UnsupportedOperationException("请通过子类覆写 pageList 实现具体 mapper 调用");
+    public List<SyncTaskDO> findAll(LambdaQueryWrapper<SyncTaskDO> query) {
+        return syncTaskMapper.selectList(query);
     }
 
     @Override
-    public void update(Object param, Object query) {
-        throw new UnsupportedOperationException("请通过子类覆写 update 实现具体 mapper 调用");
+    public List<SyncTaskDO> pageList(LambdaQueryWrapper<SyncTaskDO> query, Page<SyncTaskDO> pageParam) {
+        return syncTaskMapper.selectPage(pageParam, query).getRecords();
+    }
+
+    @Override
+    public Long count(LambdaQueryWrapper<SyncTaskDO> query) {
+        return syncTaskMapper.selectCount(query);
+    }
+
+    @Override
+    public void update(Object param, LambdaQueryWrapper<SyncTaskDO> query) {
+        if (param instanceof LambdaUpdateWrapper) {
+            syncTaskMapper.update(null, (LambdaUpdateWrapper<SyncTaskDO>) param);
+        } else {
+            throw new IllegalArgumentException("param 必须是 LambdaUpdateWrapper<SyncTaskDO> 类型");
+        }
     }
 
     @Override
     public void updateById(Object param) {
-        throw new UnsupportedOperationException("请通过子类覆写 updateById 实现具体 mapper 调用");
+        if (param instanceof SyncTaskDO) {
+            syncTaskMapper.updateById((SyncTaskDO) param);
+        } else {
+            throw new IllegalArgumentException("param 必须是 SyncTaskDO 类型");
+        }
     }
 
     @Override
     public void batchUpdateById(List<?> params) {
-        throw new UnsupportedOperationException("请通过子类覆写 batchUpdateById 实现具体 mapper 调用");
+        for (Object param : params) {
+            if (param instanceof SyncTaskDO) {
+                syncTaskMapper.updateById((SyncTaskDO) param);
+            }
+        }
     }
 
     @Override
     public void incrementRetryTimes(List<Long> ids) {
-        throw new UnsupportedOperationException("请通过子类覆写 incrementRetryTimes 实现具体 mapper 调用");
+        if (ids != null && !ids.isEmpty()) {
+            syncTaskMapper.incrementRetryTimes(ids);
+        }
+    }
+
+    /**
+     * 按默认状态列表拉取待处理任务。
+     */
+    public List<SyncTaskDO> fetchPendingTasks(int limit) {
+        return syncTaskMapper.selectPendingTasks(DEFAULT_PENDING_STATUSES, limit);
+    }
+
+    /**
+     * 按指定状态列表拉取待处理任务。
+     */
+    public List<SyncTaskDO> fetchPendingTasks(List<String> statuses, int limit) {
+        return syncTaskMapper.selectPendingTasks(statuses, limit);
     }
 }

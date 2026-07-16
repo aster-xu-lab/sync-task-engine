@@ -76,18 +76,18 @@
 | 多 Job 分工 + 差异化 cron = 每种状态独立的重试心跳 | 引擎内部延迟队列/退避算法 | 用组合现有基础设施替代写代码 |
 | 三级告警阈值策略 | 完整的消息队列 | MySQL sync_task 表就是任务队列，够用且可控 |
 
-### 3. 七个 SPI 扩展点
+### 3. 八个 SPI 扩展点
 
 | SPI | 解决的原耦合 | 接入方实现 |
 |-----|------------|-----------|
-| **SchedulerAdapter** | 解除对 xxl-job 的耦合（XxlJobHelper.getJobParam() / XxlJobHelper.log()） | 实现 xxl-job / PowerJob / 手动触发适配器 |
-| **SyncTaskParamParser** | 解除参数解析对 Jackson/JSON 特定实现的耦合 | 实现自定义解析逻辑，或直接配置 param-class 使用默认实现 |
-| **TaskStore** | 解除对 ISyncTaskService（MyBatis-Plus）的耦合 | 实现 MyBatis / JPA / Mongo / 外部 API |
-| **NotifyChannel** | 解除对 QWRobotUtil（企微机器人）的耦合 | 实现企微 / 飞书 / 钉钉 / 邮件 |
-| **LockService** | 解除对 @XLock 注解框架的耦合 | 实现 Redisson / @XLock 适配 / DB 行锁 |
-| **SyncTaskParamValidator** | 解除对业务枚举（OrderTypeEnum/SystemEnum）的耦合 | 各项目实现自己的校验逻辑 |
-| **TaskLifecycleListener** | 补充缺失的生命周期事件（原设计没有） | Metrics 埋点 / 审计日志 / 编排链 |
-| **TaskArchiveService** | 补充历史任务归档能力（原设计没有） | 实现历史表迁移/物理删除，用 xxl-job cron 触发 |
+| **SchedulerAdapter** | 解除对 xxl-job 的耦合 | 实现 xxl-job / PowerJob / 手动触发适配器 |
+| **SyncTaskParamParser** | 解除参数解析对 JSON 实现的耦合 | 实现自定义解析逻辑，或配置 `param-class` 使用默认 Jackson 解析 |
+| **TaskStore** | 解除对 ORM 框架的耦合 | MyBatis（默认免费配送）/ JPA / Mongo / 外部 API |
+| **NotifyChannel** | 解除对企微机器人的耦合 | 实现企微 / 飞书 / 钉钉 / 邮件 |
+| **LockService** | 解除对 @XLock 框架的耦合 | Redisson（默认免费配送）/ DB 行锁 |
+| **SyncTaskParamValidator** | 解除对业务枚举的耦合 | 各项目实现自己的校验逻辑 |
+| **TaskLifecycleListener** | 补充生命周期事件 | Metrics 埋点 / 审计日志 / 编排链 |
+| **TaskArchiveService** | 补充历史任务归档能力 | MyBatis（默认免费配送）/ 定时物理删除 |
 
 ### 4. 状态机设计
 
@@ -219,7 +219,38 @@ public class MySyncTaskHandler implements SyncTaskHandler<SyncTaskBO, SyncTaskCo
 }
 ```
 
-### 4. 可选：实现 SPI 扩展
+### 4. 建表（使用默认 MyBatis 实现时）
+
+引擎提供了标准表结构，在 `adapter-mybatis` 的 `resources/db/schema-mysql.sql` 中。
+直接执行即可：
+
+```sql
+-- 任务队列表
+CREATE TABLE `sync_task` (
+    `id`                BIGINT      NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `order_type`        INT         NOT NULL              COMMENT '单据类型',
+    `sync_task_type`    INT         DEFAULT NULL          COMMENT '同步任务类型（可选）',
+    `sync_system`       INT         NOT NULL              COMMENT '目标系统',
+    `source_order_code` VARCHAR(64) DEFAULT NULL          COMMENT '来源单号',
+    `task_status`       VARCHAR(16) NOT NULL DEFAULT 'INIT' COMMENT 'INIT/WAIT/PROCESSING/SUCCESS/FAIL',
+    `retry_times`       INT         DEFAULT 0             COMMENT '已重试次数',
+    `error_message`     TEXT        DEFAULT NULL          COMMENT '错误信息',
+    `sync_success_time` DATETIME    DEFAULT NULL          COMMENT '同步成功时间',
+    `create_time`       DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `update_time`       DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    INDEX `idx_status` (`task_status`),
+    INDEX `idx_order_system` (`order_type`, `sync_system`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='同步任务表';
+
+-- 归档表（结构一致，用于存放历史数据）
+CREATE TABLE `sync_task_archive` (
+    -- 与 sync_task 字段一致，额外增加 original_create_time / original_update_time / archive_time
+    ...
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='同步任务归档表';
+```
+
+### 5. 可选：实现 SPI 扩展
 
 ```java
 @Component
@@ -266,7 +297,8 @@ sync-task-engine/
 ├── pom.xml                                     # 父 POM
 ├── sync-task-engine-core/                      # 引擎核心（零框架依赖）
 │   └── src/main/java/com/cloud/sync/task/engine/
-│       ├── spi/                                # 8 个 SPI 接口
+│       ├── SyncTaskEngineConstants.java        # 常量定义（默认值、配置 key）
+│       ├── spi/                                # 10 个 SPI 接口
 │       │   ├── SyncTaskHandler.java            # 同步任务处理器（业务实现）
 │       │   ├── SyncTaskParam.java              # 任务调度参数
 │       │   ├── SyncTaskParamParser.java        # 参数解析器（JSON → SyncTaskParam）
@@ -306,10 +338,18 @@ sync-task-engine/
     ├── sync-task-engine-adapter-mybatis/        # DAL层：MyBatis-Plus
     │   └── src/main/
     │       ├── java/.../adapter/mybatis/
+    │       │   ├── entity/
+    │       │   │   ├── SyncTaskDO.java                # sync_task 表实体
+    │       │   │   └── SyncTaskArchiveDO.java         # sync_task_archive 表实体
+    │       │   ├── mapper/
+    │       │   │   └── SyncTaskMapper.java            # Mapper（含拉取/归档 SQL）
     │       │   ├── MybatisTaskStore.java              # TaskStore 默认实现
     │       │   ├── MybatisTaskArchiveService.java     # 归档默认实现
-    │       │   └── MybatisAutoConfiguration.java      # 自动装配
-    │       └── resources/META-INF/spring/spring.factories
+    │       │   └── MybatisAutoConfiguration.java      # 自动装配 + @MapperScan
+    │       └── resources/
+    │           ├── db/schema-mysql.sql                # DDL
+    │           ├── mapper/SyncTaskMapper.xml           # 自定义 SQL
+    │           └── META-INF/spring/spring.factories
     │
     └── sync-task-engine-adapter-redisson/       # 锁层：Redisson
         └── src/main/

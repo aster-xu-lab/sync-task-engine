@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cloud.sync.task.engine.adapter.mybatis.mapper.SyncTaskMapper">
+
+    <!-- ==================== 结果映射 ==================== -->
+
+    <resultMap id="BaseResultMap" type="com.cloud.sync.task.engine.adapter.mybatis.entity.SyncTaskDO">
+        <id column="id" property="id"/>
+        <result column="order_type" property="orderType"/>
+        <result column="sync_task_type" property="syncTaskType"/>
+        <result column="sync_system" property="syncSystem"/>
+        <result column="source_order_code" property="sourceOrderCode"/>
+        <result column="task_status" property="taskStatus"/>
+        <result column="retry_times" property="retryTimes"/>
+        <result column="error_message" property="errorMessage"/>
+        <result column="sync_success_time" property="syncSuccessTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- ==================== 查询 ==================== -->
+
+    <select id="selectPendingTasks" resultMap="BaseResultMap">
+        SELECT *
+        FROM sync_task
+        WHERE task_status IN
+        <foreach collection="statuses" item="status" open="(" separator="," close=")">
+            #{status}
+        </foreach>
+        ORDER BY FIELD(task_status,
+        <foreach collection="statuses" item="status" separator=",">
+            #{status}
+        </foreach>
+        ), retry_times ASC, create_time ASC
+        LIMIT #{limit}
+    </select>
+
+    <!-- ==================== 更新 ==================== -->
+
+    <update id="incrementRetryTimes">
+        UPDATE sync_task
+        SET retry_times = retry_times + 1, update_time = NOW()
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <!-- ==================== 归档 ==================== -->
+
+    <insert id="archiveSuccessTasks">
+        INSERT INTO sync_task_archive
+            (id, order_type, sync_task_type, sync_system, source_order_code,
+             task_status, retry_times, error_message, sync_success_time,
+             original_create_time, original_update_time, archive_time)
+        SELECT id, order_type, sync_task_type, sync_system, source_order_code,
+               task_status, retry_times, error_message, sync_success_time,
+               create_time, update_time, NOW()
+        FROM sync_task
+        WHERE task_status = 'SUCCESS' AND update_time &lt; #{beforeTime}
+    </insert>
+
+    <insert id="archiveDeadTasks">
+        INSERT INTO sync_task_archive
+            (id, order_type, sync_task_type, sync_system, source_order_code,
+             task_status, retry_times, error_message, sync_success_time,
+             original_create_time, original_update_time, archive_time)
+        SELECT id, order_type, sync_task_type, sync_system, source_order_code,
+               task_status, retry_times, error_message, sync_success_time,
+               create_time, update_time, NOW()
+        FROM sync_task
+        WHERE task_status = 'FAIL'
+          AND update_time &lt; #{beforeTime}
+    </insert>
+
+</mapper>

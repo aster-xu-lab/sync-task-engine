@@ -17,7 +17,7 @@ public interface SyncTaskHandler<T, C> {
     /**
      * 获取处理器唯一 key。
      * <p>格式由 Handler 自行决定，引擎不做预设。
-     * 例如 cloud-order: orderType-syncTaskType-syncSystem，cloud-wms: orderType-syncSystem。</p>
+     * 例如 bizType-syncTaskType-syncSystem，格式由接入方自行约定。</p>
      *
      * @return Handler key
      */

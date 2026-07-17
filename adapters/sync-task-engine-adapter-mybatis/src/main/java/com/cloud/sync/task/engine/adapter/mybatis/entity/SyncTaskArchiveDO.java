@@ -23,8 +23,8 @@ public class SyncTaskArchiveDO implements Serializable {
     @TableId(type = IdType.INPUT)
     private Long id;
 
-    /** 单据类型 */
-    private Integer orderType;
+    /** 业务类型 */
+    private Integer bizType;
 
     /** 同步任务类型（可选） */
     private Integer syncTaskType;
@@ -32,8 +32,11 @@ public class SyncTaskArchiveDO implements Serializable {
     /** 目标系统 */
     private Integer syncSystem;
 
-    /** 来源单号 */
-    private String sourceOrderCode;
+    /** 基准业务编号 */
+    private String referenceNo;
+
+    /** 来源编号 */
+    private String sourceNo;
 
     /** 归档前最终状态：SUCCESS / FAIL */
     private String taskStatus;
@@ -66,12 +69,12 @@ public class SyncTaskArchiveDO implements Serializable {
         this.id = id;
     }
 
-    public Integer getOrderType() {
-        return orderType;
+    public Integer getBizType() {
+        return bizType;
     }
 
-    public void setOrderType(Integer orderType) {
-        this.orderType = orderType;
+    public void setBizType(Integer bizType) {
+        this.bizType = bizType;
     }
 
     public Integer getSyncTaskType() {
@@ -90,12 +93,20 @@ public class SyncTaskArchiveDO implements Serializable {
         this.syncSystem = syncSystem;
     }
 
-    public String getSourceOrderCode() {
-        return sourceOrderCode;
+    public String getReferenceNo() {
+        return referenceNo;
     }
 
-    public void setSourceOrderCode(String sourceOrderCode) {
-        this.sourceOrderCode = sourceOrderCode;
+    public void setReferenceNo(String referenceNo) {
+        this.referenceNo = referenceNo;
+    }
+
+    public String getSourceNo() {
+        return sourceNo;
+    }
+
+    public void setSourceNo(String sourceNo) {
+        this.sourceNo = sourceNo;
     }
 
     public String getTaskStatus() {

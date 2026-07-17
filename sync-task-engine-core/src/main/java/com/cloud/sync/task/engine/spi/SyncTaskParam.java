@@ -15,9 +15,9 @@ import java.util.List;
 public interface SyncTaskParam {
 
     /**
-     * 获取单据类型。
+     * 获取业务类型（不限定"单据"，适用于任何需要同步的业务场景）。
      */
-    Integer getOrderType();
+    Integer getBizType();
 
     /**
      * 获取同步任务类型。cloud-wms 无此概念，返回 null 即可。
@@ -81,9 +81,9 @@ public interface SyncTaskParam {
     }
 
     /**
-     * 获取指定单号列表（手动执行场景）。
+     * 获取指定编号列表（手动执行场景）。
      */
-    default List<String> getSourceOrderCodes() {
+    default List<String> getSourceNos() {
         return null;
     }
 

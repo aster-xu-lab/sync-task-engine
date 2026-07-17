@@ -7,10 +7,11 @@
 
     <resultMap id="BaseResultMap" type="com.cloud.sync.task.engine.adapter.mybatis.entity.SyncTaskDO">
         <id column="id" property="id"/>
-        <result column="order_type" property="orderType"/>
+        <result column="biz_type" property="bizType"/>
         <result column="sync_task_type" property="syncTaskType"/>
         <result column="sync_system" property="syncSystem"/>
-        <result column="source_order_code" property="sourceOrderCode"/>
+        <result column="reference_no" property="referenceNo"/>
+        <result column="source_no" property="sourceNo"/>
         <result column="task_status" property="taskStatus"/>
         <result column="retry_times" property="retryTimes"/>
         <result column="error_message" property="errorMessage"/>
@@ -51,10 +52,10 @@
 
     <insert id="archiveSuccessTasks">
         INSERT INTO sync_task_archive
-            (id, order_type, sync_task_type, sync_system, source_order_code,
+            (id, biz_type, sync_task_type, sync_system, reference_no, source_no,
              task_status, retry_times, error_message, sync_success_time,
              original_create_time, original_update_time, archive_time)
-        SELECT id, order_type, sync_task_type, sync_system, source_order_code,
+        SELECT id, biz_type, sync_task_type, sync_system, reference_no, source_no,
                task_status, retry_times, error_message, sync_success_time,
                create_time, update_time, NOW()
         FROM sync_task
@@ -63,10 +64,10 @@
 
     <insert id="archiveDeadTasks">
         INSERT INTO sync_task_archive
-            (id, order_type, sync_task_type, sync_system, source_order_code,
+            (id, biz_type, sync_task_type, sync_system, reference_no, source_no,
              task_status, retry_times, error_message, sync_success_time,
              original_create_time, original_update_time, archive_time)
-        SELECT id, order_type, sync_task_type, sync_system, source_order_code,
+        SELECT id, biz_type, sync_task_type, sync_system, reference_no, source_no,
                task_status, retry_times, error_message, sync_success_time,
                create_time, update_time, NOW()
         FROM sync_task

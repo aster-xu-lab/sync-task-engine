@@ -112,8 +112,8 @@ public class SyncTaskEngine<T, C> {
         // 4. 路由获取处理器
         SyncTaskHandler<T, C> handler = registry.getHandler(param);
         if (ObjectUtil.isNull(handler)) {
-            schedulerAdapter.logInfo("[SyncTaskEngine] 找不到对应的处理器, orderType={}, syncSystem={}",
-                    param.getOrderType(), param.getSyncSystem());
+            schedulerAdapter.logInfo("[SyncTaskEngine] 找不到对应的处理器, bizType={}, syncSystem={}",
+                    param.getBizType(), param.getSyncSystem());
             return;
         }
         schedulerAdapter.logInfo("[SyncTaskEngine] 实际处理器: {}", handler.getClass().getName());

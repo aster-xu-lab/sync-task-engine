@@ -23,8 +23,8 @@ public class SyncTaskDO implements Serializable {
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /** 单据类型（销售/采购/售后/开票...） */
-    private Integer orderType;
+    /** 业务类型（不限定"单据"，适用于任何需要同步的业务场景） */
+    private Integer bizType;
 
     /** 同步任务类型（可选） */
     private Integer syncTaskType;
@@ -32,8 +32,11 @@ public class SyncTaskDO implements Serializable {
     /** 目标系统 */
     private Integer syncSystem;
 
-    /** 来源单号 */
-    private String sourceOrderCode;
+    /** 基准业务编号（产生同步任务的主体编号） */
+    private String referenceNo;
+
+    /** 来源编号（上游系统传入的编号） */
+    private String sourceNo;
 
     /** 任务状态：INIT / WAIT / PROCESSING / SUCCESS / FAIL */
     private String taskStatus;
@@ -63,12 +66,12 @@ public class SyncTaskDO implements Serializable {
         this.id = id;
     }
 
-    public Integer getOrderType() {
-        return orderType;
+    public Integer getBizType() {
+        return bizType;
     }
 
-    public void setOrderType(Integer orderType) {
-        this.orderType = orderType;
+    public void setBizType(Integer bizType) {
+        this.bizType = bizType;
     }
 
     public Integer getSyncTaskType() {
@@ -87,12 +90,20 @@ public class SyncTaskDO implements Serializable {
         this.syncSystem = syncSystem;
     }
 
-    public String getSourceOrderCode() {
-        return sourceOrderCode;
+    public String getReferenceNo() {
+        return referenceNo;
     }
 
-    public void setSourceOrderCode(String sourceOrderCode) {
-        this.sourceOrderCode = sourceOrderCode;
+    public void setReferenceNo(String referenceNo) {
+        this.referenceNo = referenceNo;
+    }
+
+    public String getSourceNo() {
+        return sourceNo;
+    }
+
+    public void setSourceNo(String sourceNo) {
+        this.sourceNo = sourceNo;
     }
 
     public String getTaskStatus() {
@@ -145,6 +156,6 @@ public class SyncTaskDO implements Serializable {
 
     @Override
     public String toString() {
-        return "SyncTaskDO{id=" + id + ", status=" + taskStatus + ", sourceOrder=" + sourceOrderCode + "}";
+        return "SyncTaskDO{id=" + id + ", status=" + taskStatus + ", bizType=" + bizType + ", sourceNo=" + sourceNo + "}";
     }
 }

@@ -8,7 +8,7 @@
 CREATE TABLE IF NOT EXISTS `sync_task` (
     `id`                BIGINT        NOT NULL AUTO_INCREMENT COMMENT '主键',
     `biz_type`          INT           NOT NULL                COMMENT '业务类型（不限定"单据"）',
-    `sync_task_type`    INT           DEFAULT NULL            COMMENT '同步任务类型（可选）',
+    `sync_task_type`    INT           NOT NULL                COMMENT '同步任务类型（与 biz_type 为 1:N 关系）',
     `sync_system`       INT           NOT NULL                COMMENT '目标系统',
     `reference_no`      VARCHAR(64)   DEFAULT NULL            COMMENT '基准业务编号（产生同步任务的主体编号）',
     `source_no`         VARCHAR(64)   DEFAULT NULL            COMMENT '来源编号（上游系统传入的编号）',
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS `sync_task` (
 CREATE TABLE IF NOT EXISTS `sync_task_archive` (
     `id`                  BIGINT        NOT NULL              COMMENT '主键（保留原任务ID）',
     `biz_type`            INT           NOT NULL              COMMENT '业务类型',
-    `sync_task_type`      INT           DEFAULT NULL          COMMENT '同步任务类型（可选）',
+    `sync_task_type`      INT           NOT NULL              COMMENT '同步任务类型',
     `sync_system`         INT           NOT NULL              COMMENT '目标系统',
     `reference_no`        VARCHAR(64)   DEFAULT NULL          COMMENT '基准业务编号',
     `source_no`           VARCHAR(64)   DEFAULT NULL          COMMENT '来源编号',

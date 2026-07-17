@@ -26,7 +26,7 @@ public class SyncTaskArchiveDO implements Serializable {
     /** 业务类型 */
     private Integer bizType;
 
-    /** 同步任务类型（可选） */
+    /** 同步任务类型 */
     private Integer syncTaskType;
 
     /** 目标系统 */

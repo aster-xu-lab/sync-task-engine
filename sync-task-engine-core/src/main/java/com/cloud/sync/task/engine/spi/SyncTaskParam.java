@@ -20,11 +20,9 @@ public interface SyncTaskParam {
     Integer getBizType();
 
     /**
-     * 获取同步任务类型。cloud-wms 无此概念，返回 null 即可。
+     * 获取同步任务类型（与 bizType 为 1:N 关系，如创建/修改/发货/取消）。
      */
-    default Integer getSyncTaskType() {
-        return null;
-    }
+    Integer getSyncTaskType();
 
     /**
      * 获取目标系统。

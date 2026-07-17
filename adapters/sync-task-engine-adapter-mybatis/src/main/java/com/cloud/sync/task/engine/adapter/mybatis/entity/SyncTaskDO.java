@@ -26,7 +26,7 @@ public class SyncTaskDO implements Serializable {
     /** 业务类型（不限定"单据"，适用于任何需要同步的业务场景） */
     private Integer bizType;
 
-    /** 同步任务类型（可选） */
+    /** 同步任务类型（与 bizType 为 1:N 关系，如：创建/修改/发货/取消） */
     private Integer syncTaskType;
 
     /** 目标系统 */

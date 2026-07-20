@@ -193,7 +193,7 @@ public class MyParamParser implements SyncTaskParamParser {
 public class MySyncTaskHandler implements SyncTaskHandler<SyncTaskBO, SyncTaskContext> {
     @Override
     public String getHandlerKey() {
-        return "1-1-9"; // orderType-syncTaskType-syncSystem
+        return "1-1-9"; // bizType-syncTaskType-syncSystem
     }
 
     @Override
@@ -214,7 +214,7 @@ public class MySyncTaskHandler implements SyncTaskHandler<SyncTaskBO, SyncTaskCo
 
     @Override
     public String formatMessage(SyncTaskContext context, String message) {
-        return "[" + context.getOrderCode() + "] " + message;
+        return "[" + context.getReferenceNo() + "] " + message;
     }
 }
 ```
@@ -228,10 +228,11 @@ public class MySyncTaskHandler implements SyncTaskHandler<SyncTaskBO, SyncTaskCo
 -- 任务队列表
 CREATE TABLE `sync_task` (
     `id`                BIGINT      NOT NULL AUTO_INCREMENT COMMENT '主键',
-    `order_type`        INT         NOT NULL              COMMENT '单据类型',
-    `sync_task_type`    INT         DEFAULT NULL          COMMENT '同步任务类型（可选）',
+    `biz_type`          INT         NOT NULL              COMMENT '业务类型',
+    `sync_task_type`    INT         NOT NULL              COMMENT '同步任务类型（与 biz_type 为 1:N 关系）',
     `sync_system`       INT         NOT NULL              COMMENT '目标系统',
-    `source_order_code` VARCHAR(64) DEFAULT NULL          COMMENT '来源单号',
+    `reference_no`      VARCHAR(64) DEFAULT NULL          COMMENT '基准业务编号',
+    `source_no`         VARCHAR(64) DEFAULT NULL          COMMENT '来源编号',
     `task_status`       VARCHAR(16) NOT NULL DEFAULT 'INIT' COMMENT 'INIT/WAIT/PROCESSING/SUCCESS/FAIL',
     `retry_times`       INT         DEFAULT 0             COMMENT '已重试次数',
     `error_message`     TEXT        DEFAULT NULL          COMMENT '错误信息',
@@ -240,14 +241,12 @@ CREATE TABLE `sync_task` (
     `update_time`       DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     INDEX `idx_status` (`task_status`),
-    INDEX `idx_order_system` (`order_type`, `sync_system`)
+    INDEX `idx_biz_system` (`biz_type`, `sync_system`),
+    INDEX `idx_reference_no` (`reference_no`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='同步任务表';
 
--- 归档表（结构一致，用于存放历史数据）
-CREATE TABLE `sync_task_archive` (
-    -- 与 sync_task 字段一致，额外增加 original_create_time / original_update_time / archive_time
-    ...
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='同步任务归档表';
+-- 归档表（与 sync_task 字段一致，额外增加 original_create_time / original_update_time / archive_time）
+-- 详见 adapter-mybatis 的 resources/db/schema-mysql.sql
 ```
 
 ### 5. 可选：实现 SPI 扩展
@@ -257,8 +256,8 @@ CREATE TABLE `sync_task_archive` (
 public class MyValidator implements SyncTaskParamValidator {
     @Override
     public void validate(SyncTaskParam param) throws ValidationException {
-        if (param.getOrderType() == null) {
-            throw new ValidationException("orderType 不能为空");
+        if (param.getBizType() == null) {
+            throw new ValidationException("bizType 不能为空");
         }
     }
 }
